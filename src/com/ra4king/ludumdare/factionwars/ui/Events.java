@@ -1,4 +1,4 @@
-package com.ra4king.ludumdare30.ui;
+package com.ra4king.ludumdare.factionwars.ui;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;

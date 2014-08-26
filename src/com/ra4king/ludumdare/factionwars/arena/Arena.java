@@ -1,4 +1,4 @@
-package com.ra4king.ludumdare30.arena;
+package com.ra4king.ludumdare.factionwars.arena;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -8,18 +8,19 @@ import java.awt.event.MouseEvent;
 import com.ra4king.gameutils.Entity;
 import com.ra4king.gameutils.Game;
 import com.ra4king.gameutils.gameworld.GameWorld;
-import com.ra4king.ludumdare30.Background;
-import com.ra4king.ludumdare30.controller.AIController;
-import com.ra4king.ludumdare30.controller.Controller;
-import com.ra4king.ludumdare30.controller.UserController;
-import com.ra4king.ludumdare30.ui.SidePanel;
+import com.ra4king.ludumdare.factionwars.Background;
+import com.ra4king.ludumdare.factionwars.controller.AIController;
+import com.ra4king.ludumdare.factionwars.controller.Controller;
+import com.ra4king.ludumdare.factionwars.controller.UserController;
+import com.ra4king.ludumdare.factionwars.ui.SidePanel;
 
 /**
  * @author Roi Atalla
  */
 public class Arena extends GameWorld {
 	private static final int MAX_PLAYERS = 4;
-	private final int PLANET_COUNT = 30;
+	
+	public static final int PLANET_COUNT = 30;
 	
 	public static final int CONTROLLER_Z = 1, PLANET_Z = 2, SHIP_Z = 3, SIDE_PANEL_Z = 4;
 	
@@ -81,6 +82,7 @@ public class Arena extends GameWorld {
 			for(int b = 0; b < controllersPlanet.length; b++) {
 				if(controllersPlanet[b] == a) {
 					planet.setOwner(controllers[b].getPlayer());
+					controllers[b].addExploredPlanet(planet);
 				}
 			}
 			

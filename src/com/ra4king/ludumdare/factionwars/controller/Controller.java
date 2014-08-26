@@ -1,10 +1,9 @@
-package com.ra4king.ludumdare30.controller;
+package com.ra4king.ludumdare.factionwars.controller;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -12,11 +11,11 @@ import java.util.Set;
 
 import com.ra4king.gameutils.Entity;
 import com.ra4king.gameutils.Game;
-import com.ra4king.ludumdare30.arena.Arena;
-import com.ra4king.ludumdare30.arena.Connection;
-import com.ra4king.ludumdare30.arena.Planet;
-import com.ra4king.ludumdare30.arena.Player;
-import com.ra4king.ludumdare30.arena.Ship;
+import com.ra4king.ludumdare.factionwars.arena.Arena;
+import com.ra4king.ludumdare.factionwars.arena.Connection;
+import com.ra4king.ludumdare.factionwars.arena.Planet;
+import com.ra4king.ludumdare.factionwars.arena.Player;
+import com.ra4king.ludumdare.factionwars.arena.Ship;
 
 /**
  * @author Roi Atalla
@@ -26,7 +25,7 @@ public abstract class Controller {
 	protected Arena arena;
 	protected Player player;
 	
-	protected Set<Planet> discoveredPlanets = new HashSet<>();
+	protected Set<Planet> exploredPlanets = new HashSet<>();
 	
 	public Controller(Game game, Arena arena, Player player) {
 		this.game = game;
@@ -38,8 +37,12 @@ public abstract class Controller {
 		return player;
 	}
 	
-	public boolean isDiscovered(Planet planet) {
-		return discoveredPlanets.contains(planet);
+	public boolean isExplored(Planet planet) {
+		return exploredPlanets.contains(planet);
+	}
+	
+	public void addExploredPlanet(Planet planet) {
+		exploredPlanets.add(planet);
 	}
 	
 	/**
@@ -50,11 +53,14 @@ public abstract class Controller {
 	public void draw(Graphics2D g) {
 		arena.getEntitiesAt(Arena.PLANET_Z).stream().forEach((Entity e) -> {
 			Planet p = (Planet)e;
-			if(!(this instanceof UserController) || (p.getOwner() != player && !isDiscovered(p))) {
+			if(!(this instanceof UserController) || !isExplored(p)) {
 				g.setColor(new Color(0.2f, 0.2f, 0.2f, 1));
 				
 				Ellipse2D.Double bounds = p.getBoundsEllipse();
-				g.fill(new Ellipse2D.Double(bounds.getX() - 6, bounds.getY() - 6, bounds.getWidth() + 12, bounds.getHeight() + 12));
+				g.fill(new Ellipse2D.Double(bounds.getX() - 7, bounds.getY() - 7, bounds.getWidth() + 14, bounds.getHeight() + 14));
+				
+				g.setColor(Color.BLACK);
+				g.draw(bounds);
 			}
 		});
 	}
@@ -71,7 +77,8 @@ public abstract class Controller {
 		double dx = toTarget.getX() - fromTarget.getX();
 		double dy = toTarget.getY() - fromTarget.getY();
 		
-		return dx * dx + dy * dy <= player.getStats().getFuelRange() * player.getStats().getFuelRange();
+		double maxDist = player.getStats().getFuelRange() + fromTarget.getWidth() * 0.5 + toTarget.getWidth() * 0.5;
+		return dx * dx + dy * dy <= maxDist * maxDist;
 	}
 	
 	public void selectedPlanet(Planet planet, MouseEvent me) {}
@@ -83,20 +90,16 @@ public abstract class Controller {
 			@Override
 			void doAct(Controller controller, Arena arena, Planet fromTarget, Planet toTarget) {
 				controller.getPlayer().decreaseMoney(controller.getPlayer().getStats().getExplorePrice());
-				controller.discoveredPlanets.add(fromTarget);
+				controller.exploredPlanets.add(toTarget);
 			}
 			
 			@Override
 			public boolean canAct(Controller controller, Arena arena, Planet fromTarget, Planet toTarget) {
-				boolean initial = fromTarget != null && !controller.discoveredPlanets.contains(fromTarget)
-						&& controller.getPlayer().getMoney() >= controller.getPlayer().getStats().getExplorePrice();
-				
-				if(!initial)
-					return false;
-				
-				Area test = new Area(controller.getPlayer().getPlanetsFuelRangeArea());
-				test.intersect(new Area(fromTarget.getBoundsEllipse()));
-				return !test.isEmpty();
+				return fromTarget != null && toTarget != null && fromTarget != toTarget &&
+						fromTarget.getOwner() == controller.getPlayer() &&
+						!controller.exploredPlanets.contains(toTarget) &&
+						controller.getPlayer().getMoney() >= controller.getPlayer().getStats().getExplorePrice() &&
+						controller.withinRange(fromTarget, toTarget);
 			}
 		},
 		TAX {
@@ -107,7 +110,7 @@ public abstract class Controller {
 			
 			@Override
 			public boolean canAct(Controller controller, Arena arena, Planet fromTarget, Planet toTarget) {
-				return fromTarget != null;
+				return fromTarget != null && toTarget == null && fromTarget.getOwner() == controller.getPlayer();
 			}
 		},
 		BUY_SHIP {
@@ -119,7 +122,8 @@ public abstract class Controller {
 			
 			@Override
 			public boolean canAct(Controller controller, Arena arena, Planet fromTarget, Planet toTarget) {
-				return fromTarget != null && controller.getPlayer().getMoney() >= controller.getPlayer().getStats().getShipPrice();
+				return fromTarget != null && toTarget == null && fromTarget.getOwner() == controller.getPlayer() &&
+						controller.getPlayer().getMoney() >= controller.getPlayer().getStats().getShipPrice();
 			}
 		},
 		SEND_ONE_SHIP {
@@ -130,7 +134,8 @@ public abstract class Controller {
 			
 			@Override
 			public boolean canAct(Controller controller, Arena arena, Planet fromTarget, Planet toTarget) {
-				return toTarget != null && fromTarget != null && fromTarget.getOwner() == controller.getPlayer() &&
+				return toTarget != null && fromTarget != null && fromTarget != toTarget &&
+						fromTarget.getOwner() == controller.getPlayer() && controller.isExplored(toTarget) &&
 						fromTarget.getShips().size() > 0 && controller.withinRange(fromTarget, toTarget);
 			}
 		},
@@ -149,7 +154,8 @@ public abstract class Controller {
 			
 			@Override
 			public boolean canAct(Controller controller, Arena arena, Planet fromTarget, Planet toTarget) {
-				return toTarget != null && fromTarget != null && fromTarget.getOwner() == controller.getPlayer() &&
+				return toTarget != null && fromTarget != null && fromTarget != toTarget &&
+						fromTarget.getOwner() == controller.getPlayer() && controller.isExplored(toTarget) &&
 						fromTarget.getShips().size() > 0 && controller.withinRange(fromTarget, toTarget);
 			}
 		},
@@ -168,7 +174,8 @@ public abstract class Controller {
 			
 			@Override
 			public boolean canAct(Controller controller, Arena arena, Planet fromTarget, Planet toTarget) {
-				return toTarget != null && fromTarget != null && fromTarget.getOwner() == controller.getPlayer() &&
+				return toTarget != null && fromTarget != null && fromTarget != toTarget &&
+						fromTarget.getOwner() == controller.getPlayer() && controller.isExplored(toTarget) &&
 						fromTarget.getShips().size() > 0 && controller.withinRange(fromTarget, toTarget);
 			}
 		},
@@ -204,7 +211,8 @@ public abstract class Controller {
 			
 			@Override
 			public boolean canAct(Controller controller, Arena arena, Planet fromTarget, Planet toTarget) {
-				return fromTarget != null && controller.getPlayer().getMoney() >= controller.getPlayer().getStats().getDefenseUpgradePrice();
+				return fromTarget != null && toTarget == null && fromTarget.getOwner() == controller.getPlayer() &&
+						controller.getPlayer().getMoney() >= controller.getPlayer().getStats().getDefenseUpgradePrice();
 			}
 		},
 		BUY_CONNECTION {
@@ -220,8 +228,10 @@ public abstract class Controller {
 			
 			@Override
 			public boolean canAct(Controller controller, Arena arena, Planet fromTarget, Planet toTarget) {
-				return fromTarget != null && toTarget != null && fromTarget.getOwner() == controller.getPlayer() && fromTarget.getOwner() == toTarget.getOwner() &&
-						controller.getPlayer().getMoney() >= controller.getPlayer().getStats().getConnectionPrice();
+				return fromTarget != null && toTarget != null && fromTarget != toTarget &&
+						fromTarget.getOwner() == controller.getPlayer() && fromTarget.getOwner() == toTarget.getOwner() &&
+						controller.getPlayer().getMoney() >= controller.getPlayer().getStats().getConnectionPrice() &&
+						controller.withinRange(fromTarget, toTarget);
 			}
 		};
 		

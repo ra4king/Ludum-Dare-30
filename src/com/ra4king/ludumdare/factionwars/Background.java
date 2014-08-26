@@ -1,4 +1,4 @@
-package com.ra4king.ludumdare30;
+package com.ra4king.ludumdare.factionwars;
 
 import java.awt.Color;
 import java.awt.Graphics2D;

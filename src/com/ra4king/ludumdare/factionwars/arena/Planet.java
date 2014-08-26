@@ -1,4 +1,4 @@
-package com.ra4king.ludumdare30.arena;
+package com.ra4king.ludumdare.factionwars.arena;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -13,7 +13,7 @@ import java.util.Set;
 import com.ra4king.gameutils.Entity;
 import com.ra4king.gameutils.gameworld.GameComponent;
 import com.ra4king.gameutils.gameworld.GameWorld;
-import com.ra4king.ludumdare30.ui.Events;
+import com.ra4king.ludumdare.factionwars.ui.Events;
 
 /**
  * @author Roi Atalla
@@ -126,13 +126,7 @@ public class Planet extends GameComponent {
 	}
 	
 	public void setOwner(Player owner) {
-		if(this.owner != null)
-			this.owner.removePlanet(this);
-		
 		this.owner = owner;
-		
-		if(owner != null)
-			owner.addPlanet(this);
 	}
 	
 	public Set<Connection> getConnections() {

@@ -1,28 +1,28 @@
-package com.ra4king.ludumdare30;
+package com.ra4king.ludumdare.factionwars;
 
 /**
  * @author Roi Atalla
  */
 public class Stats {
 	private double fuelRange = 150; // in pixels
-	private double fuelRangeIncrease = 30;
+	private double fuelRangeIncrease = 60;
 	
 	private int fuelRangePrice = 400;
 	private int fuelRangePriceIncrease = 50;
-	
-	private double weaponDamage = 1; // defense value
 	
 	private int explorePrice = 20;
 	
 	private int shipPrice = 60;
 	private final int shipPriceIncrease = 40;
+
+	private double weaponDamage = 1;
 	
-	private int weaponUpgradePrice = 100;
+	private int weaponUpgradePrice = 500;
 	private int weaponUpgradePriceIncrease = 50;
 	
 	private double defenseUpgradeValue = 3;
-	private int defenseUpgradePrice = 30;
-	private int defenseUpgradePriceIncrease = 30;
+	private int defenseUpgradePrice = 100;
+	private int defenseUpgradePriceIncrease = 50;
 	
 	private int connectionPrice = 1000;
 	private int connectionPriceIncrease = 500;

@@ -1,4 +1,4 @@
-package com.ra4king.ludumdare30.controller;
+package com.ra4king.ludumdare.factionwars.controller;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -14,9 +14,9 @@ import java.awt.geom.Rectangle2D;
 import com.ra4king.gameutils.Entity;
 import com.ra4king.gameutils.Game;
 import com.ra4king.gameutils.gameworld.GameComponent;
-import com.ra4king.ludumdare30.arena.Arena;
-import com.ra4king.ludumdare30.arena.Planet;
-import com.ra4king.ludumdare30.arena.Player;
+import com.ra4king.ludumdare.factionwars.arena.Arena;
+import com.ra4king.ludumdare.factionwars.arena.Planet;
+import com.ra4king.ludumdare.factionwars.arena.Player;
 
 /**
  * @author Roi Atalla
@@ -38,16 +38,13 @@ public class UserController extends Controller {
 			@Override
 			public void draw(Graphics2D g) {
 				if(selectedFromPlanet != null && selectedFromPlanet.getOwner() == player) {
-					g.setColor(new Color(0.6f, 0.6f, 0.6f, 0.2f));
+					g.setColor(new Color(0.6f, 0.6f, 0.6f, 0.1f));
 					
 					double fuelRange = player.getStats().getFuelRange();
-					ellipse.setFrame(selectedFromPlanet.getX() - fuelRange, selectedFromPlanet.getY() - fuelRange,
+					ellipse.setFrame(selectedFromPlanet.getCenterX() - fuelRange, selectedFromPlanet.getCenterY() - fuelRange,
 							fuelRange * 2, fuelRange * 2);
 					g.fill(ellipse);
 				}
-				
-				g.setColor(new Color(0.8f, 0.8f, 0.8f, 0.05f));
-				g.fill(player.getPlanetsFuelRangeArea());
 			}
 		});
 	}
@@ -72,7 +69,6 @@ public class UserController extends Controller {
 			}
 		} finally {
 			selectedAction = null;
-			selectedToPlanet = null;
 		}
 		
 		return false;
@@ -100,7 +96,7 @@ public class UserController extends Controller {
 			g.setStroke(new BasicStroke(2));
 			g.setColor(Color.WHITE);
 			
-			if(isDiscovered(selectedFromPlanet) || selectedFromPlanet.getOwner() == player)
+			if(isExplored(selectedFromPlanet) || selectedFromPlanet.getOwner() == player)
 				g.drawOval(selectedFromPlanet.getIntX(), selectedFromPlanet.getIntY(), selectedFromPlanet.getIntWidth(), selectedFromPlanet.getIntHeight());
 			else
 				g.drawOval(selectedFromPlanet.getIntX() - 6, selectedFromPlanet.getIntY() - 6, selectedFromPlanet.getIntWidth() + 12, selectedFromPlanet.getIntHeight() + 12);
@@ -114,7 +110,7 @@ public class UserController extends Controller {
 			g.setStroke(new BasicStroke(2));
 			g.setColor(Color.CYAN);
 			
-			if(isDiscovered(selectedToPlanet) || selectedToPlanet.getOwner() == player)
+			if(isExplored(selectedToPlanet) || selectedToPlanet.getOwner() == player)
 				g.drawOval(selectedToPlanet.getIntX(), selectedToPlanet.getIntY(), selectedToPlanet.getIntWidth(), selectedToPlanet.getIntHeight());
 			else
 				g.drawOval(selectedToPlanet.getIntX() - 6, selectedToPlanet.getIntY() - 6, selectedToPlanet.getIntWidth() + 12, selectedToPlanet.getIntHeight() + 12);
@@ -126,7 +122,7 @@ public class UserController extends Controller {
 	@Override
 	public void selectedPlanet(Planet target, MouseEvent me) {
 		if(me.getButton() == MouseEvent.BUTTON1) {
-			selectedFromPlanet = target;
+			selectedFromPlanet = (selectedFromPlanet == target ? null : target);
 			selectedToPlanet = null;
 		}
 		else if(me.getButton() == MouseEvent.BUTTON3 && selectedFromPlanet != null && selectedFromPlanet.getOwner() == player && selectedFromPlanet != target) {

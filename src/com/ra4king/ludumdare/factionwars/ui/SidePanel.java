@@ -1,16 +1,17 @@
-package com.ra4king.ludumdare30.ui;
+package com.ra4king.ludumdare.factionwars.ui;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 
 import com.ra4king.gameutils.gameworld.GameComponent;
+import com.ra4king.gameutils.gameworld.GameWorld;
 import com.ra4king.gameutils.gui.Button;
-import com.ra4king.ludumdare30.arena.Arena;
-import com.ra4king.ludumdare30.arena.Planet;
-import com.ra4king.ludumdare30.arena.Player;
-import com.ra4king.ludumdare30.controller.Controller.Action;
-import com.ra4king.ludumdare30.controller.UserController;
+import com.ra4king.ludumdare.factionwars.arena.Arena;
+import com.ra4king.ludumdare.factionwars.arena.Planet;
+import com.ra4king.ludumdare.factionwars.arena.Player;
+import com.ra4king.ludumdare.factionwars.controller.Controller.Action;
+import com.ra4king.ludumdare.factionwars.controller.UserController;
 
 /**
  * @author Roi Atalla
@@ -108,24 +109,26 @@ public class SidePanel extends GameComponent {
 		buyConnection.setWidth(170);
 	}
 	
-	// @Override
-	// public void init(GameWorld world) {
-	// BufferedImage[] images = {
-	// (BufferedImage)getParent().getGame().getArt().get("button1"),
-	// (BufferedImage)getParent().getGame().getArt().get("button2"),
-	// (BufferedImage)getParent().getGame().getArt().get("button3")
-	// };
-	//
-	// int r;
-	// explore.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth() * 2, images[r].getHeight() * 2)));
-	// tax.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth() * 2, images[r].getHeight() * 2)));
-	// buy.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth(), images[r].getHeight())));
-	// sendOne.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth(), images[r].getHeight())));
-	// sendHalf.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth(), images[r].getHeight())));
-	// sendAll.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth(), images[r].getHeight())));
-	// upgradeDefense.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth(), images[r].getHeight())));
-	// upgradeWeapons.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth(), images[r].getHeight())));
-	// }
+	@Override
+	public void init(GameWorld world) {
+		// BufferedImage[] images = {
+		// (BufferedImage)getParent().getGame().getArt().get("button1"),
+		// (BufferedImage)getParent().getGame().getArt().get("button2"),
+		// (BufferedImage)getParent().getGame().getArt().get("button3")
+		// };
+		//
+		// int r;
+		// explore.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth() * 4, images[r].getHeight() * 4)));
+		// tax.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth() * 4, images[r].getHeight() * 4)));
+		// buy.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth(), images[r].getHeight())));
+		// sendOne.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth(), images[r].getHeight())));
+		// sendHalf.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth(), images[r].getHeight())));
+		// sendAll.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth(), images[r].getHeight())));
+		// upgradeDefense.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth(), images[r].getHeight())));
+		// upgradeWeapons.setBackground(new TexturePaint(images[(r = (int)(Math.random() * 3))], new Rectangle2D.Double(0, 0, images[r].getWidth(), images[r].getHeight())));
+		
+		updateUI();
+	}
 	
 	public void updateUI() {
 		Arena arena = (Arena)getParent();
@@ -145,55 +148,63 @@ public class SidePanel extends GameComponent {
 		Planet fromPlanet = userController.getSelectedFromPlanet();
 		Planet toPlanet = userController.getSelectedToPlanet();
 		
-		if(fromPlanet != null) {
-			if(fromPlanet.getOwner() == userController.getPlayer()) {
-				int taxAmount = fromPlanet.getTaxAmount();
-				tax.setEnabled(taxAmount > 0);
-				tax.setText("Tax +$" + taxAmount);
-				arena.add(UI_Z, tax);
-				
-				int shipPrice = player.getStats().getShipPrice();
-				buy.setEnabled(player.getMoney() >= shipPrice);
-				buy.setText(BUY_TEXT + " -$" + shipPrice);
-				arena.add(UI_Z, buy);
-				
-				int defenseUpgradePrice = player.getStats().getDefenseUpgradePrice();
-				upgradeDefense.setEnabled(player.getMoney() >= defenseUpgradePrice);
-				upgradeDefense.setText(UPGRADE_DEFENSE_TEXT + " -$" + defenseUpgradePrice);
-				arena.add(UI_Z, upgradeDefense);
-				
-				if(toPlanet != null && fromPlanet != toPlanet && userController.withinRange(fromPlanet, toPlanet)) {
-					if(fromPlanet.getShips().size() > 0) {
-						arena.add(UI_Z, sendOne);
-						arena.add(UI_Z, sendHalf);
-						arena.add(UI_Z, sendAll);
-					}
-					
-					int connectionPrice = player.getStats().getConnectionPrice();
-					buyConnection.setEnabled(player.getMoney() >= connectionPrice);
-					buyConnection.setText(BUY_CONNECTION + " -$" + connectionPrice);
-					arena.add(UI_Z, buyConnection);
-				}
-			}
-			else {
-				if(!userController.isDiscovered(fromPlanet) && Action.EXPLORE.canAct(userController, arena, userController.getSelectedFromPlanet(), null)) {
-					int explorePrice = player.getStats().getExplorePrice();
-					explore.setEnabled(player.getMoney() >= explorePrice);
-					explore.setText(EXPLORE_TEXT + " -$" + explorePrice);
-					arena.add(UI_Z, explore);
-				}
-			}
+		if(fromPlanet != null && fromPlanet == toPlanet)
+			throw new IllegalStateException("What in the fuck?!");
+		
+		if(Action.TAX.canAct(userController, arena, fromPlanet, toPlanet)) {
+			int taxAmount = fromPlanet.getTaxAmount();
+			tax.setEnabled(taxAmount > 0);
+			tax.setText(TAX_TEXT + " +$" + taxAmount);
+			arena.add(UI_Z, tax);
 		}
 		
-		int upgradeFuelRangePrice = player.getStats().getFuelRangePrice();
-		upgradeFuelRange.setText(UPGRADE_FUEL_RANGE + " -$" + upgradeFuelRangePrice);
-		upgradeFuelRange.setEnabled(player.getMoney() >= upgradeFuelRangePrice);
-		arena.add(UI_Z, upgradeFuelRange);
+		if(Action.BUY_SHIP.canAct(userController, arena, fromPlanet, toPlanet)) {
+			int shipPrice = player.getStats().getShipPrice();
+			buy.setEnabled(player.getMoney() >= shipPrice);
+			buy.setText(BUY_TEXT + " -$" + shipPrice);
+			arena.add(UI_Z, buy);
+		}
 		
-		int upgradeWeaponsPrice = player.getStats().getWeaponUpgradePrice();
-		upgradeWeapons.setText(UPGRADE_WEAPONS_TEXT + " -$" + upgradeWeaponsPrice);
-		upgradeWeapons.setEnabled(player.getMoney() >= upgradeWeaponsPrice);
-		arena.add(UI_Z, upgradeWeapons);
+		if(Action.UPGRADE_DEFENSE.canAct(userController, arena, fromPlanet, toPlanet)) {
+			int defenseUpgradePrice = player.getStats().getDefenseUpgradePrice();
+			upgradeDefense.setEnabled(player.getMoney() >= defenseUpgradePrice);
+			upgradeDefense.setText(UPGRADE_DEFENSE_TEXT + " -$" + defenseUpgradePrice);
+			arena.add(UI_Z, upgradeDefense);
+		}
+		
+		if(Action.SEND_ONE_SHIP.canAct(userController, arena, fromPlanet, toPlanet)) {
+			arena.add(UI_Z, sendOne);
+			arena.add(UI_Z, sendHalf);
+			arena.add(UI_Z, sendAll);
+		}
+		
+		if(Action.BUY_CONNECTION.canAct(userController, arena, fromPlanet, toPlanet)) {
+			int connectionPrice = player.getStats().getConnectionPrice();
+			buyConnection.setEnabled(player.getMoney() >= connectionPrice);
+			buyConnection.setText(BUY_CONNECTION + " -$" + connectionPrice);
+			arena.add(UI_Z, buyConnection);
+		}
+		
+		if(Action.EXPLORE.canAct(userController, arena, fromPlanet, toPlanet)) {
+			int explorePrice = player.getStats().getExplorePrice();
+			explore.setEnabled(player.getMoney() >= explorePrice);
+			explore.setText(EXPLORE_TEXT + " -$" + explorePrice);
+			arena.add(UI_Z, explore);
+		}
+		
+		if(Action.UPGRADE_FUEL_RANGE.canAct(userController, arena, fromPlanet, toPlanet)) {
+			int upgradeFuelRangePrice = player.getStats().getFuelRangePrice();
+			upgradeFuelRange.setText(UPGRADE_FUEL_RANGE + " -$" + upgradeFuelRangePrice);
+			upgradeFuelRange.setEnabled(player.getMoney() >= upgradeFuelRangePrice);
+			arena.add(UI_Z, upgradeFuelRange);
+		}
+		
+		if(Action.UPGRADE_WEAPONS.canAct(userController, arena, fromPlanet, toPlanet)) {
+			int upgradeWeaponsPrice = player.getStats().getWeaponUpgradePrice();
+			upgradeWeapons.setText(UPGRADE_WEAPONS_TEXT + " -$" + upgradeWeaponsPrice);
+			upgradeWeapons.setEnabled(player.getMoney() >= upgradeWeaponsPrice);
+			arena.add(UI_Z, upgradeWeapons);
+		}
 	}
 	
 	@Override
@@ -209,9 +220,10 @@ public class SidePanel extends GameComponent {
 		g.drawString("Damage: " + userController.getPlayer().getStats().getWeaponDamage(), (float)(getX() + 30), 30);
 		
 		Planet fromPlanet = userController.getSelectedFromPlanet();
-		if(fromPlanet != null && (userController.isDiscovered(fromPlanet) || fromPlanet.getOwner() == userController.getPlayer())) {
+		if(fromPlanet != null && (userController.isExplored(fromPlanet) || fromPlanet.getOwner() == userController.getPlayer())) {
 			g.drawString("Selected planet:", (float)(getX() + 30), (float)(getHeight() - 100));
-			g.drawString("Defense: " + fromPlanet.getDefense(), (float)(getX() + 30), (float)(getHeight() - 85));
+			g.drawString("Defense: " + String.format("%.1f", fromPlanet.getDefense()), (float)(getX() + 30), (float)(getHeight() - 85));
+			g.drawString("Ships: " + fromPlanet.getShips().size(), (float)(getX() + 30), (float)(getHeight() - 70));
 		}
 	}
 }

@@ -20,13 +20,14 @@ import com.ra4king.ludumdare.factionwars.ui.SidePanel;
 public class Arena extends GameWorld {
 	private static final int MAX_PLAYERS = 4;
 	
-	public static final int PLANET_COUNT = 30;
+	public static final int PLANET_COUNT = 35;
 	
 	public static final int CONTROLLER_Z = 1, PLANET_Z = 2, SHIP_Z = 3, SIDE_PANEL_Z = 4;
 	
 	private double arenaWidth, arenaHeight;
 	
 	private int currentTurn;
+	private UserController userController;
 	private Controller[] controllers = new Controller[MAX_PLAYERS];
 	
 	private SidePanel sidePanel;
@@ -48,7 +49,7 @@ public class Arena extends GameWorld {
 		
 		add(0, new Background(0, 0, getWidth(), arenaHeight));
 		
-		controllers[0] = new UserController(game, this, new Player(1));
+		controllers[0] = userController = new UserController(game, this, new Player(1));
 		controllers[1] = new AIController(game, this, new Player(2));
 		controllers[2] = new AIController(game, this, new Player(3));
 		controllers[3] = new AIController(game, this, new Player(4));
@@ -112,7 +113,7 @@ public class Arena extends GameWorld {
 	public void draw(Graphics2D g) {
 		super.draw(g);
 		
-		controllers[currentTurn].draw(g);
+		userController.draw(g);
 	}
 	
 	@Override

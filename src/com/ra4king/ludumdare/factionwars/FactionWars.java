@@ -47,7 +47,7 @@ public class FactionWars extends Game {
 			exc.printStackTrace();
 		}
 		
-		setScreen("Splash", new Splash());
+		setScreen("Splash", new SplashScreen());
 	}
 	
 	@Override

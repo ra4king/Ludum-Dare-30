@@ -23,6 +23,9 @@ public class AIController extends Controller {
 		List<Planet> knownOwnedPlanets = new ArrayList<>();
 		arena.getEntitiesAt(Arena.PLANET_Z).stream().filter(e -> ((Planet)e).getOwner() == player).forEach(e -> knownOwnedPlanets.add((Planet)e));
 		
+		if(knownOwnedPlanets.size() == 0)
+			return true;
+
 		ArrayList<PossibleAction> possibleActions = new ArrayList<>();
 		
 		for(Action action : Action.values()) {
@@ -37,20 +40,31 @@ public class AIController extends Controller {
 			}
 		}
 		
-		PossibleAction maxYieldAction = null;
-		double maxYield = Integer.MIN_VALUE;
+		List<PossibleActionYieldPair> maxYieldActions = new ArrayList<>();
 		for(PossibleAction pa : possibleActions) {
 			double yield = netYield(pa, knownOwnedPlanets);
-			if(yield > maxYield) {
-				maxYield = yield;
-				maxYieldAction = pa;
-			}
+			
+			System.out.println(pa + " - " + yield);
+			
+			if(maxYieldActions.size() == 0 || yield >= maxYieldActions.get(0).yield) {
+				if(maxYieldActions.size() > 0 && yield > maxYieldActions.get(0).yield)
+					maxYieldActions.clear();
+				
+				maxYieldActions.add(new PossibleActionYieldPair(pa, yield));
+	}
 		}
 		
-		if(maxYieldAction == null) {
+		if(maxYieldActions.size() == 0) {
 			// try again....
 			return doTurn();
 		}
+		
+		PossibleActionYieldPair maxYieldActionYieldPair = maxYieldActions.get((int)(Math.random() * maxYieldActions.size()));
+		PossibleAction maxYieldAction = maxYieldActionYieldPair.possibleAction;
+		double maxYield = maxYieldActionYieldPair.yield;
+		
+		System.out.println("Final selection: " + maxYieldAction + " - " + maxYield);
+		System.out.println("----------------------------------------\n");
 		
 		act(maxYieldAction.action, maxYieldAction.from, maxYieldAction.to);
 		
@@ -62,18 +76,18 @@ public class AIController extends Controller {
 	private double netYield(PossibleAction possibleAction, List<Planet> knownOwnedPlanets) {
 		switch(possibleAction.action) {
 			case EXPLORE:
-				return -player.getStats().getExplorePrice() + 5 * (Arena.PLANET_COUNT - exploredPlanets.size());
+				return 400 - 5 * knownOwnedPlanets.size();
 			case TAX:
-				return possibleAction.from.getTaxAmount();
+				return 10 * possibleAction.from.getTaxAmount(); // +tax
 			case BUY_SHIP:
 				int buyShipPrice = player.getStats().getShipPrice();
-				return buyShipPrice / (0.3 * possibleAction.from.getShips().size() + 1);
+				return 2 * buyShipPrice / (possibleAction.from.getShips().size() + 1);
 			case SEND_ONE_SHIP:
-				return 20 * (Arena.PLANET_COUNT - knownOwnedPlanets.size()) - 4 * (possibleAction.to.getOwner() != player ?
-						possibleAction.to.getDefense() + possibleAction.to.getShips().size() : 0);
+				return 10 * (Arena.PLANET_COUNT - knownOwnedPlanets.size()) + 2 * (possibleAction.to.getOwner() != player ?
+						player.getStats().getWeaponDamage() * possibleAction.from.getShips().size() - (possibleAction.to.getDefense() + possibleAction.to.getShips().size()) : 0);
 			case SEND_HALF_SHIPS:
-				return 10 * (Arena.PLANET_COUNT - knownOwnedPlanets.size()) - 4 * (possibleAction.to.getOwner() != player ?
-						possibleAction.to.getDefense() + possibleAction.to.getShips().size() : 0);
+				return 17 * (Arena.PLANET_COUNT - knownOwnedPlanets.size()) + 3 * (possibleAction.to.getOwner() != player ?
+						player.getStats().getWeaponDamage() * possibleAction.from.getShips().size() - (possibleAction.to.getDefense() + possibleAction.to.getShips().size()) : 0);
 			case SEND_ALL_SHIPS:
 				return !lastKnownOwnedPlanets.contains(possibleAction.to) ? 1000 : -1000;
 			case UPGRADE_DEFENSE:
@@ -81,7 +95,7 @@ public class AIController extends Controller {
 				return -upgradeDefensePrice + 10 * (72 - possibleAction.from.getDefense());
 			case UPGRADE_FUEL_RANGE:
 				int fuelRangePrice = player.getStats().getFuelRangePrice();
-				return -fuelRangePrice + knownOwnedPlanets.size() * (fuelRangePrice / 7.0);
+				return -fuelRangePrice + (Arena.PLANET_COUNT - knownOwnedPlanets.size()) * (fuelRangePrice / 7.0);
 			case UPGRADE_WEAPONS:
 				int upgradeWeaponsPrice = player.getStats().getWeaponUpgradePrice();
 				return -upgradeWeaponsPrice + (knownOwnedPlanets.stream().mapToInt(p -> p.getShips().size()).sum() * 25) / upgradeWeaponsPrice;
@@ -97,6 +111,7 @@ public class AIController extends Controller {
 	private Planet[] chooseFrom(Action action, List<Planet> knownOwnedPlanets) {
 		switch(action) {
 			case EXPLORE:
+			case BUY_SHIP:
 				return knownOwnedPlanets.toArray(new Planet[knownOwnedPlanets.size()]);
 			case UPGRADE_FUEL_RANGE:
 			case UPGRADE_WEAPONS:
@@ -109,17 +124,15 @@ public class AIController extends Controller {
 					return new Planet[] { null };
 				
 				return convert(arena.getEntitiesAt(Arena.PLANET_Z).stream().map(e -> (Planet)e).filter(p -> (p.getOwner() == player && p.getTaxAmount() == maxTax)).toArray());
-			case BUY_SHIP:
-				return convert(arena.getEntitiesAt(Arena.PLANET_Z).stream().map(e -> (Planet)e).filter(p -> p.getOwner() == player).toArray());
 			case SEND_ONE_SHIP:
 				return convert(knownOwnedPlanets.stream().filter((Planet p) -> p.getShips().size() > 0).toArray());
 			case SEND_HALF_SHIPS:
-				return convert(knownOwnedPlanets.stream().filter((Planet p) -> p.getShips().size() > 2).toArray());
+				return convert(knownOwnedPlanets.stream().filter((Planet p) -> p.getShips().size() > 1).toArray());
 			case SEND_ALL_SHIPS:
-				return convert(knownOwnedPlanets.stream().filter((Planet p) -> p.getShips().size() > 4 && p.getDefense() > 5).toArray());
+				return convert(knownOwnedPlanets.stream().filter((Planet p) -> p.getShips().size() > 2 && p.getDefense() > 2).toArray());
 			case UPGRADE_DEFENSE:
 				double avgDefense = knownOwnedPlanets.stream().mapToDouble(Planet::getDefense).average().orElse(0.0);
-				return convert(knownOwnedPlanets.stream().filter((Planet p) -> p.getDefense() < avgDefense).toArray());
+				return convert(knownOwnedPlanets.stream().filter((Planet p) -> p.getDefense() <= avgDefense).toArray());
 			case BUY_CONNECTION:
 				return knownOwnedPlanets.toArray(new Planet[knownOwnedPlanets.size()]);
 			default:
@@ -139,10 +152,11 @@ public class AIController extends Controller {
 				return new Planet[] { null };
 			case SEND_ONE_SHIP:
 			case SEND_HALF_SHIPS:
-				double avgShips = knownOwnedPlanets.stream().mapToDouble((Planet p) -> p.getShips().size()).average().orElse(0.0);
-				return convert(knownOwnedPlanets.stream().filter((Planet p) -> p.getShips().size() < avgShips && withinRange(from, p)).toArray());
+				double avgShips = exploredPlanets.stream().mapToDouble((Planet p) -> p.getShips().size()).average().orElse(0.0);
+				return convert(exploredPlanets.stream().filter((Planet p) -> p != from &&
+						((p.getOwner() == player && p.getShips().size() <= avgShips) || (p.getOwner() != player)) && withinRange(from, p)).toArray());
 			case SEND_ALL_SHIPS:
-				return convert(knownOwnedPlanets.stream().filter((Planet p) -> !lastKnownOwnedPlanets.contains(p) && withinRange(from, p)).toArray());
+				return convert(exploredPlanets.stream().filter((Planet p) -> p != from && !lastKnownOwnedPlanets.contains(p) && withinRange(from, p)).toArray());
 			case BUY_CONNECTION:
 				return convert(knownOwnedPlanets.stream().filter(p -> p != from).toArray());
 			default:
@@ -165,6 +179,21 @@ public class AIController extends Controller {
 			this.action = action;
 			this.from = from;
 			this.to = to;
+		}
+		
+		@Override
+		public String toString() {
+			return "Possible Action: " + action + " from " + from + " to " + to;
+		}
+	}
+	
+	private static class PossibleActionYieldPair {
+		private PossibleAction possibleAction;
+		private double yield;
+		
+		public PossibleActionYieldPair(PossibleAction possibleAction, double yield) {
+			this.possibleAction = possibleAction;
+			this.yield = yield;
 		}
 	}
 }

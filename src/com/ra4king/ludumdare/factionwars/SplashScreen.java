@@ -12,7 +12,7 @@ import com.ra4king.ludumdare.factionwars.arena.Arena;
 /**
  * @author Roi Atalla
  */
-public class Splash extends BasicScreen {
+public class SplashScreen extends BasicScreen {
 	@Override
 	public void update(long deltaTime) {
 		
@@ -32,7 +32,7 @@ public class Splash extends BasicScreen {
 	}
 	
 	@Override
-	public void mouseClicked(MouseEvent me) {
+	public void mousePressed(MouseEvent me) {
 		getGame().setScreen("Arena", new Arena());
 	}
 }

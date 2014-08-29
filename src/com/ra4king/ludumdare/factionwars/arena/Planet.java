@@ -31,6 +31,9 @@ public class Planet extends GameComponent {
 	
 	private int planetImage;
 	
+	private static int count = 0;
+	private final int ID;
+
 	private static final int taxStep = 10;
 	
 	public static final Color[] playerColors = {
@@ -51,6 +54,8 @@ public class Planet extends GameComponent {
 		taxProduced = taxStep;
 		
 		planetImage = (int)(Math.random() * 5) + 1;
+		
+		ID = count++;
 	}
 	
 	@Override
@@ -60,8 +65,8 @@ public class Planet extends GameComponent {
 		if(!super.intersects(ship) || ship.getToPlanet() != this)
 			return false;
 		
-		if(owner != ship.getOwner() && (ships.size() > 0 || defense > 0)) {
-			if(ships.size() > 0) {
+		if(owner != ship.getOwner()) {
+		if(ships.size() > 0) {
 				Ship toRemove = removeShip();
 				
 				getParent().remove(toRemove);
@@ -72,24 +77,24 @@ public class Planet extends GameComponent {
 			} else if(defense > 0) {
 				defense = Math.max(0.0, defense - ship.getOwner().getStats().getWeaponDamage());
 			}
-		} else if(owner == ship.getOwner()) {
-			ship.setFromPlanet(this, elapsedTime);
-			ships.add(ship);
-		}
-		
-		if(ships.size() == 0 && defense == 0.0) {
-			if(owner == null) {
-				Events.pushEvent(ship.getOwner() + " took over a planet.");
-			}
-			else if(owner != ship.getOwner()) {
-				Events.pushEvent(ship.getOwner() + " took over " + owner + "' planet!");
-			}
-
-			connections.stream().forEach(getParent()::remove);
-			connections.clear();
 			
-			setOwner(ship.getOwner());
-			ship.setFromPlanet(this, elapsedTime);
+			if(ships.size() == 0 && defense == 0.0) {
+				if(owner == null) {
+					Events.pushEvent(ship.getOwner() + " took over a planet.");
+				}
+				else if(owner != ship.getOwner()) {
+					Events.pushEvent(ship.getOwner() + " took over " + owner + "' planet!");
+				}
+				
+				connections.stream().forEach(getParent()::remove);
+				connections.clear();
+				
+				setOwner(ship.getOwner());
+				ship.setFromPlanet(this, elapsedTime);
+				ships.add(ship);
+			}
+		} else {
+	ship.setFromPlanet(this, elapsedTime);
 			ships.add(ship);
 		}
 		
@@ -127,10 +132,6 @@ public class Planet extends GameComponent {
 	
 	public void setOwner(Player owner) {
 		this.owner = owner;
-	}
-	
-	public Set<Connection> getConnections() {
-		return connections;
 	}
 	
 	public void addConnection(Connection c) {
@@ -193,11 +194,20 @@ public class Planet extends GameComponent {
 		
 		g.setColor(playerColors[owner == null ? 0 : owner.getID()]);
 		g.fill(new Ellipse2D.Double(getX(), getY(), getWidth(), getHeight()));
-
+		
 		Stroke old = g.getStroke();
 		g.setStroke(new BasicStroke(2));
 		g.setColor(playerColors[owner == null ? 0 : owner.getID()]);
 		g.drawArc((int)Math.round(getX() - 3), (int)Math.round(getY() - 3), (int)Math.round(getWidth() + 6), (int)Math.round(getHeight() + 6), 90, -1 * (int)Math.round(defense * 5));
 		g.setStroke(old);
+	}
+	
+	public int getID() {
+		return ID;
+	}
+	
+	@Override
+	public String toString() {
+		return "Planet " + ID;
 	}
 }

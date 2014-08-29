@@ -16,7 +16,8 @@ public class Stats {
 	private final int shipPriceIncrease = 40;
 
 	private double weaponDamage = 1;
-	
+	private double weaponDamageIncrease = 0.5;
+
 	private int weaponUpgradePrice = 500;
 	private int weaponUpgradePriceIncrease = 50;
 	
@@ -49,8 +50,8 @@ public class Stats {
 		return weaponDamage;
 	}
 	
-	public double increaseWeaponDamage(double delta) {
-		return weaponDamage += delta;
+	public double increaseWeaponDamage() {
+		return weaponDamage += weaponDamageIncrease;
 	}
 	
 	public int getExplorePrice() {

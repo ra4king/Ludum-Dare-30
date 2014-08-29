@@ -1,15 +1,11 @@
 package com.ra4king.ludumdare.factionwars.controller;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Ellipse2D;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.ra4king.gameutils.Entity;
 import com.ra4king.gameutils.Game;
 import com.ra4king.ludumdare.factionwars.arena.Arena;
 import com.ra4king.ludumdare.factionwars.arena.Connection;
@@ -50,21 +46,6 @@ public abstract class Controller {
 	 */
 	public abstract boolean doTurn();
 	
-	public void draw(Graphics2D g) {
-		arena.getEntitiesAt(Arena.PLANET_Z).stream().forEach((Entity e) -> {
-			Planet p = (Planet)e;
-			if(!(this instanceof UserController) || !isExplored(p)) {
-				g.setColor(new Color(0.2f, 0.2f, 0.2f, 1));
-				
-				Ellipse2D.Double bounds = p.getBoundsEllipse();
-				g.fill(new Ellipse2D.Double(bounds.getX() - 7, bounds.getY() - 7, bounds.getWidth() + 14, bounds.getHeight() + 14));
-				
-				g.setColor(Color.BLACK);
-				g.draw(bounds);
-			}
-		});
-	}
-	
 	protected void act(Action action, Planet fromTarget, Planet toTarget) {
 		action.act(this, arena, fromTarget, toTarget);
 	}
@@ -77,7 +58,7 @@ public abstract class Controller {
 		double dx = toTarget.getX() - fromTarget.getX();
 		double dy = toTarget.getY() - fromTarget.getY();
 		
-		double maxDist = player.getStats().getFuelRange() + fromTarget.getWidth() * 0.5 + toTarget.getWidth() * 0.5;
+		double maxDist = player.getStats().getFuelRange() + fromTarget.getWidth() * 0.5;
 		return dx * dx + dy * dy <= maxDist * maxDist;
 	}
 	
@@ -97,7 +78,7 @@ public abstract class Controller {
 			public boolean canAct(Controller controller, Arena arena, Planet fromTarget, Planet toTarget) {
 				return fromTarget != null && toTarget != null && fromTarget != toTarget &&
 						fromTarget.getOwner() == controller.getPlayer() &&
-						!controller.exploredPlanets.contains(toTarget) &&
+						!controller.isExplored(toTarget) &&
 						controller.getPlayer().getMoney() >= controller.getPlayer().getStats().getExplorePrice() &&
 						controller.withinRange(fromTarget, toTarget);
 			}
@@ -195,6 +176,7 @@ public abstract class Controller {
 			@Override
 			void doAct(Controller controller, Arena arena, Planet fromTarget, Planet toTarget) {
 				controller.getPlayer().decreaseMoney(controller.getPlayer().getStats().getAndIncreaseWeaponUpgradePrice());
+				controller.getPlayer().getStats().increaseWeaponDamage();
 			}
 			
 			@Override

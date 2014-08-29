@@ -14,6 +14,7 @@ import java.awt.geom.Rectangle2D;
 import com.ra4king.gameutils.Entity;
 import com.ra4king.gameutils.Game;
 import com.ra4king.gameutils.gameworld.GameComponent;
+import com.ra4king.ludumdare.factionwars.GameOverScreen;
 import com.ra4king.ludumdare.factionwars.arena.Arena;
 import com.ra4king.ludumdare.factionwars.arena.Planet;
 import com.ra4king.ludumdare.factionwars.arena.Player;
@@ -59,6 +60,13 @@ public class UserController extends Controller {
 	
 	@Override
 	public boolean doTurn() {
+		long planetCount = arena.getEntitiesAt(Arena.PLANET_Z).stream().map(e -> (Planet)e).filter(p -> p.getOwner() == player).count();
+		if(planetCount == 0) {
+			arena.getGame().setScreen("Game Over", new GameOverScreen(arena, false));
+		} else if(planetCount == Arena.PLANET_COUNT) {
+			arena.getGame().setScreen("Game Over", new GameOverScreen(arena, true));
+		}
+
 		if(selectedAction == null)
 			return false;
 		
@@ -74,10 +82,23 @@ public class UserController extends Controller {
 		return false;
 	}
 	
-	@Override
 	public void draw(Graphics2D g) {
-		super.draw(g);
-		
+		arena.getEntitiesAt(Arena.PLANET_Z).stream().forEach((Entity e) -> {
+			Planet p = (Planet)e;
+			if(!isExplored(p)) {
+				g.setColor(new Color(0.2f, 0.2f, 0.2f, 1));
+				
+				Ellipse2D.Double bounds = p.getBoundsEllipse();
+				g.fill(new Ellipse2D.Double(bounds.getX() - 7, bounds.getY() - 7, bounds.getWidth() + 14, bounds.getHeight() + 14));
+				
+				g.setColor(Color.BLACK);
+				g.draw(bounds);
+			}
+			
+			g.setColor(Color.green.brighter());
+			g.drawString(String.valueOf(p.getID()), p.getIntCenterX() - 2, p.getIntCenterY() + p.getIntWidth());
+		});
+
 		g.setColor(Color.WHITE);
 		g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
 		FontMetrics fm = g.getFontMetrics();
@@ -122,7 +143,7 @@ public class UserController extends Controller {
 	@Override
 	public void selectedPlanet(Planet target, MouseEvent me) {
 		if(me.getButton() == MouseEvent.BUTTON1) {
-			selectedFromPlanet = (selectedFromPlanet == target ? null : target);
+			selectedFromPlanet = target;
 			selectedToPlanet = null;
 		}
 		else if(me.getButton() == MouseEvent.BUTTON3 && selectedFromPlanet != null && selectedFromPlanet.getOwner() == player && selectedFromPlanet != target) {
